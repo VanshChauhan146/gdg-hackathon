@@ -15,6 +15,6 @@ export default {
   mailbox: { endpoint: '', email: 'prashant@labyrinth.dev', turnstileSitekey: '' },
   // Labyrinth, the chat widget/pet, served by /api/chat. Leave endpoint empty to hide it.
   // `icon` is the button/sprite image; swap in your own file and point this at it.
-  agent: { endpoint: '/api/chat', icon: 'assets/labyrinth-icon.svg' },
+  agent: { endpoint: 'https://labyrinth-gdg.vercel.app/api/chat', icon: 'assets/labyrinth-icon.svg' },
   badge: false,
 };

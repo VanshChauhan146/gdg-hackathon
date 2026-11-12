@@ -1,0 +1,45 @@
+name: Deploy to gdg.nith.ac.in/labyrinth
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-labyrinth
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build
+        run: bash tools/build.sh
+
+      - name: Deploy via rsync
+        env:
+          SSHPASS: ${{ secrets.DEPLOY_PASS }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq sshpass
+
+          # Ensure the target directory exists
+          sshpass -e ssh -o StrictHostKeyChecking=no \
+            "${DEPLOY_USER}@${DEPLOY_HOST}" \
+            "mkdir -p /var/www/labyrinth"
+
+          # rsync the built site
+          sshpass -e rsync -az --delete \
+            -e "ssh -o StrictHostKeyChecking=no" \
+            dist/ "${DEPLOY_USER}@${DEPLOY_HOST}:/var/www/labyrinth/"
+
+          echo "Deployed to https://gdg.nith.ac.in/labyrinth/"

@@ -1,28 +1,44 @@
-// Tracks: a blacksmith's forge with an anvil and an armour stand.
+// Tracks: 3D Voxel GDG Hackathon Challenge Tracks Monument.
 // Local frame: (0, 0) is the centre, +z is the front (faces the path).
+import * as THREE from 'three';
+import { loadModel } from '../models.js';
+import { bakeStation } from '../bake.js';
+
+const MODEL_SCALE = 0.42;
+
 export default {
-  size: [3.2, 2.6, 3.2],
-  build({ box, solid, light, cornerLights, M }) {
-    cornerLights(3.2, 3.2, 'fire');
+  size: [4.6, 2.8, 4.6],
+  build({ solid, light, plane, cornerLights }) {
+    cornerLights(4.6, 4.6, 'fire');
 
-    // Furnace and chimney.
-    box(0, 0, -0.6, 1.5, 1.6, 1.4, M.deepslate);
-    box(0, 1.6, -0.6, 0.75, 1.0, 0.75, M.stone);
-    box(0, 0.35, 0.12, 0.75, 0.55, 0.08, M.fireGlow);
-    // Anvil on a stump.
-    box(-0.85, 0, 0.5, 0.55, 0.45, 0.55, M.log);
-    box(-0.85, 0.45, 0.5, 0.45, 0.1, 0.28, M.blackMetal);
-    box(-0.85, 0.55, 0.5, 0.2, 0.15, 0.16, M.blackMetal);
-    box(-0.9, 0.7, 0.5, 0.55, 0.15, 0.26, M.steel);
-    // Armour stand in diamond.
-    box(0.85, 0, 0.5, 0.55, 0.08, 0.55, M.stone);
-    box(0.85, 0.08, 0.5, 0.08, 1.1, 0.08, M.wood);
-    box(0.85, 0.7, 0.5, 0.48, 0.58, 0.26, M.diamond);
-    box(0.85, 1.25, 0.5, 0.36, 0.32, 0.36, M.diamond);
+    const group = new THREE.Group();
+    plane(group, 0, 0, 0);
 
-    solid(0, -0.6, 1.5, 1.4);
-    solid(-0.85, 0.5, 0.55, 0.55);
-    solid(0.85, 0.5, 0.55, 0.55);
-    light(0, 0.6, 0.3, 2.8, 10, [0, 0, 1]);
+    loadModel('assets/models/gdg_tracks.glb', (gltf) => {
+      const model = gltf.scene;
+      model.scale.setScalar(MODEL_SCALE);
+      model.rotation.x = -Math.PI / 2;
+
+      const emissiveColor = new THREE.Color(0x17100a);
+      model.traverse((child) => {
+        if (child.isMesh) {
+          child.castShadow = true;
+          child.receiveShadow = true;
+          const mat = Array.isArray(child.material) ? child.material[0] : child.material;
+          if (mat) {
+            mat.emissive = emissiveColor;
+            mat.emissiveIntensity = 0.2;
+          }
+        }
+      });
+
+      const optimized = bakeStation(model);
+      group.add(optimized);
+    });
+
+    solid(0, 0, 4.6, 4.6);
+    light(0, 2.0, -1.5, 2.8, 8, [0, -0.15, 1]);
+    light(-1.25, 1.15, 0.5, 2.2, 7);
+    light(1.25, 1.15, 0.5, 2.2, 7);
   },
 };
